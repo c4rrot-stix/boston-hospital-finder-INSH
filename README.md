@@ -50,7 +50,7 @@ Understanding the big picture before prompting AI will make your prompts signifi
 ---
 
 ## Your tasks
-
+You will also need a ChatGPT, Claude, or Gemini account to complete the prompt engineering exercises.  The whole point of this project is to let AI do the heavy lifting for us. With prompt engineering, it's often better to understand the code at a high level, rather than in depth.
 ### 🟢 Ticket 1 — Add a Leaflet Map *(in-class exercise)*
 **What:** Add an interactive map using [Leaflet.js](https://leafletjs.com) that shows a pin for each hospital result. Clicking a sidebar card should pan the map to that hospital.
 
