@@ -229,8 +229,13 @@ function makeMarker(lat, lon) {
 // Think about: which factors are most relevant to hospital access?
 async function loadVulnerability() {
   try {
-    const text = await fetch(VULN_CSV).then(r => r.text());
+    const res = await fetch(VULN_CSV);
+    console.log("Vuln CSV response status:", res.status);
+    const text = await res.text();
+    console.log("Vuln CSV first 200 chars:", text.substring(0, 200));
     const rows = parseCSV(text);
+    console.log("Vuln CSV parsed rows:", rows.length);
+    if (rows.length > 0) console.log("First row keys:", Object.keys(rows[0]));
     const grouped = {};
     rows.forEach(r => {
       const name = (r["NAME"] || "").toUpperCase().trim();
@@ -259,8 +264,10 @@ async function loadVulnerability() {
         };
       }
     }
+    console.log("Neighborhoods loaded:", Object.keys(vulnByNeigh).length);
+    console.log("Sample keys:", Object.keys(vulnByNeigh).slice(0, 5));
   } catch (e) {
-    console.warn("Failed to load vulnerability data:", e);
+    console.error("Failed to load vulnerability data:", e);
   }
 }
 
