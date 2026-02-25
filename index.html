@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -5,6 +6,7 @@
   <meta charset="UTF-8">
 
   <!-- TODO: Ticket 1 — add Leaflet CSS link here -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -32,9 +34,10 @@
     #main { display: flex; height: calc(100vh - 110px); }
 
     /* TODO: Ticket 1 — add #map style here */
+    #map { flex: 1; min-height: 300px; z-index: 0; }
 
     #sidebar {
-      width: 100%; /* TODO: Ticket 1 — change to 320px once map is added */
+      width: 320px; /* TODO: Ticket 1 — change to 320px once map is added */
       background: white;
       border-left: 1px solid #ddd;
       display: flex; flex-direction: column;
@@ -88,6 +91,7 @@
 <div id="main">
 
   <!-- TODO: Ticket 1 — add <div id="map"></div> here -->
+  <div id="map"></div>
 
   <div id="sidebar">
     <div id="sidebar-header">Enter a ZIP code to find nearby hospitals</div>
@@ -97,6 +101,7 @@
 </div>
 
 <!-- TODO: Ticket 1 — add Leaflet JS script tag here -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 
 <script>
 // ── Data URLs ──
@@ -105,6 +110,7 @@ const VULN_CSV     = "https://bostonopendata-boston.opendata.arcgis.com/api/down
 
 // ── State ──
 // TODO: Ticket 1 — add map and markersLayer variables here
+let map, markersLayer;
 let vulnByNeigh = {}; // stores vulnerability scores keyed by neighborhood name
 
 // ── TODO: Ticket 1 — add initMap() function here ──
@@ -112,6 +118,14 @@ let vulnByNeigh = {}; // stores vulnerability scores keyed by neighborhood name
 // 1. Create a Leaflet map centered on Boston [42.3601, -71.0589] zoom 12
 // 2. Add OpenStreetMap tile layer
 // 3. Create a markersLayer (L.layerGroup) and add to map
+function initMap() {
+  map = L.map("map").setView([42.3601, -71.0589], 12);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19
+  }).addTo(map);
+  markersLayer = L.layerGroup().addTo(map);
+}
 
 // ── Robust CSV parser (handles quoted fields with embedded commas and newlines) ──
 function parseCSV(text) {
@@ -179,6 +193,16 @@ async function getZipCoords(zip) {
 
 // ── TODO: Ticket 1 — add makeMarker(lat, lon) function here ──
 // Use L.circleMarker, radius 10, blue fill, white border
+function makeMarker(lat, lon) {
+  return L.circleMarker([lat, lon], {
+    radius: 10,
+    fillColor: "#003087",
+    color: "#ffffff",
+    weight: 2,
+    opacity: 1,
+    fillOpacity: 0.85
+  });
+}
 
 // ── TODO: Ticket 2 — add loadVulnerability() function here ──
 // Should:
@@ -222,6 +246,10 @@ function renderSidebar(matches, markers) {
       document.querySelectorAll(".hospital-card").forEach(c => c.classList.remove("active"));
       card.classList.add("active");
       // TODO: Ticket 1 — pan map and open popup: markers[idx].openPopup(); map.panTo(...)
+      if (markers[idx]) {
+        markers[idx].openPopup();
+        map.panTo([h.lat, h.lon]);
+      }
     };
     resultsDiv.appendChild(card);
   });
@@ -243,6 +271,7 @@ async function findHospitals() {
   loading.style.display = "block";
   resultsDiv.innerHTML  = "";
   // TODO: Ticket 1 — clear existing markers: markersLayer.clearLayers()
+  markersLayer.clearLayers();
 
   // Step 1: convert ZIP to coordinates
   const coords = await getZipCoords(zipInput);
@@ -283,6 +312,12 @@ async function findHospitals() {
   // TODO: Ticket 1 — fit map to markers: map.fitBounds(L.featureGroup(markers).getBounds().pad(0.2))
   // TODO: Ticket 2 — bind popup to each marker: marker.bindPopup(makePopupHTML(h, vuln))
   const markers = []; // TODO: Ticket 1 — fill this array with your markers
+  matches.forEach(h => {
+    const marker = makeMarker(h.lat, h.lon);
+    marker.addTo(markersLayer);
+    markers.push(marker);
+  });
+  map.fitBounds(L.featureGroup(markers).getBounds().pad(0.2));
 
   // Step 5: render sidebar
   renderSidebar(matches, markers);
@@ -295,6 +330,7 @@ document.getElementById("zip").addEventListener("keydown", e => {
 
 // ── Boot ──
 // TODO: Ticket 1 — call initMap() here
+initMap();
 </script>
 </body>
 </html>
