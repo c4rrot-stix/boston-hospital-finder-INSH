@@ -11,7 +11,7 @@ A web app that helps users find hospitals near any US ZIP code, built with open 
 - Accepts a ZIP code and search radius from the user
 - Converts the ZIP to coordinates using the free [Zippopotam API](https://api.zippopotam.us)
 - Fetches hospital location data from Boston's open data portal
-- Calculates distance to each hospital using the Haversine formula
+- Calculates distance to each hospital using Euclidean distance — simple and accurate enough for a small local area like Boston
 - Displays matching hospitals in a sidebar sorted by distance
 
 ---
@@ -21,10 +21,25 @@ A web app that helps users find hospitals near any US ZIP code, built with open 
 ### Step 1 — Fork the repo
 Click **Fork** at the top right of this GitHub page. This creates your own personal copy — you can break things freely without affecting anyone else.
 
-### Step 2 — Open the browser editor
+### Step 2 — Explore the datasets first
+Before writing any code, open both datasets and spend a few minutes looking at the raw data:
+
+- **Hospital Locations** — [view dataset](https://data.boston.gov/dataset/hospital-locations/resource/6222085d-ee88-45c6-ae40-0c7464620d64)
+- **Climate Ready Boston Social Vulnerability** — [view dataset](https://data.boston.gov/dataset/climate-ready-boston-social-vulnerability)
+
+Try to answer these questions:
+- What columns does each dataset have?
+- What does one row represent in each dataset?
+- Which column in the hospital dataset tells you where the hospital is located geographically?
+- The vulnerability dataset has multiple rows per neighborhood — why do you think that is?
+- Which column appears in **both** datasets and could be used to connect them?
+
+Understanding the data before writing code is one of the most important habits in data work. If you misread a column or assume the wrong unit, your results will be wrong even if your code is correct.
+
+### Step 3 — Open the browser editor
 On your forked repo press the **period key (`.`)** on your keyboard. This opens a full VS Code environment in your browser with no install needed.
 
-### Step 3 — Read the code first
+### Step 4 — Read the code first
 Before asking AI for help, spend 5–10 minutes reading `index.html`. Try to answer:
 - What does `parseCSV()` do and why is a custom parser needed?
 - What is the Haversine formula used for?
@@ -71,16 +86,25 @@ Do not change anything outside the TODO comments.
 
 **Why it matters:** This is a real data join — connecting two datasets on a shared field (`NEIGH` in hospitals, `Name` in vulnerability). It also teaches Leaflet interactivity and the idea that good data tools let users go deeper than a summary.
 
-**How the vulnerability percentages are calculated:**
-For each neighborhood, sum up the population and each factor across all census tracts, then divide by total population:
+**Your job:** Choose at least 2 factors from the vulnerability dataset to show in the popup. Think about which ones are most relevant to hospital access — for example, elderly residents and people with disabilities may have greater need for nearby healthcare than other groups.
+
+Available columns:
+
+| Column | What it measures |
+|---|---|
+| `OlderAdult` | Residents over 65 |
+| `TotChild` | Children under 5 |
+| `Low_to_No` | Low or no income households |
+| `TotDis` | People with disabilities |
+| `LEP` | Limited English proficiency |
+
+Note: `MedIllnes` is intentionally excluded — it is a modeled estimate with known double-counting issues, not a clean census count.
+
+**How percentages are calculated:**
+For each neighborhood, sum the chosen factors across all census tract rows, then divide by total population:
 ```
-elderly %    = (total OlderAdult / total POP100_RE) * 100
-children %   = (total TotChild   / total POP100_RE) * 100
-low income % = (total Low_to_No  / total POP100_RE) * 100
-disabled %   = (total TotDis     / total POP100_RE) * 100
-limited eng% = (total LEP        / total POP100_RE) * 100
+elderly % = (total OlderAdult / total POP100_RE) * 100
 ```
-Each neighborhood has multiple census tract rows in the CSV — you need to sum across all of them before dividing. No composite score needed, just the 5 individual percentages shown in the popup.
 
 **Find:** All `// TODO: Ticket 2` comments.
 
