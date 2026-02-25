@@ -378,8 +378,14 @@ async function findHospitals() {
   const markers = []; // TODO: Ticket 1 — fill this array with your markers
   matches.forEach(h => {
     const marker = makeMarker(h.lat, h.lon);
-    const vuln = vulnByNeigh[(h.NEIGH || "").toUpperCase().trim()];
-    marker.bindPopup(makePopupHTML(h, vuln), { maxWidth: 280 });
+    const neighKey = (h.NEIGH || "").toUpperCase().trim();
+    const vuln = vulnByNeigh[neighKey] || null;
+    try {
+      marker.bindPopup(makePopupHTML(h, vuln), { maxWidth: 280 });
+    } catch (e) {
+      console.error("Popup error for", h.NAME, e);
+      marker.bindPopup("<b>" + (h.NAME || "Hospital") + "</b>");
+    }
     marker.addTo(markersLayer);
     markers.push(marker);
   });
