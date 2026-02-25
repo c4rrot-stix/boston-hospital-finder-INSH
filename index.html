@@ -241,7 +241,7 @@ async function loadVulnerability() {
     for (const [name, tracts] of Object.entries(grouped)) {
       let totPop = 0, totOlder = 0, totChild = 0, totLowInc = 0, totDis = 0, totLEP = 0;
       tracts.forEach(t => {
-        const pop = parseFloat(t["POP"] || 0) || 0;
+        const pop = parseFloat(t["POP100_RE"] || 0) || 0;
         totPop    += pop;
         totOlder  += parseFloat(t["OLDERADULT"] || 0) || 0;
         totChild  += parseFloat(t["TOTCHILD"] || 0) || 0;
@@ -378,8 +378,16 @@ async function findHospitals() {
   const markers = []; // TODO: Ticket 1 — fill this array with your markers
   matches.forEach(h => {
     const marker = makeMarker(h.lat, h.lon);
-    const vuln = vulnByNeigh[(h.NEIGH || "").toUpperCase().trim()];
-    marker.bindPopup(makePopupHTML(h, vuln), { maxWidth: 280 });
+    const neighKey = (h.NEIGH || "").toUpperCase().trim();
+    const vuln = vulnByNeigh[neighKey]
+      || neighKey.split("/").map(p => vulnByNeigh[p.trim()]).find(v => v)
+      || null;
+    try {
+      marker.bindPopup(makePopupHTML(h, vuln), { maxWidth: 280 });
+    } catch (e) {
+      console.error("Popup error for", h.NAME, e);
+      marker.bindPopup("<b>" + (h.NAME || "Hospital") + "</b>");
+    }
     marker.addTo(markersLayer);
     markers.push(marker);
   });
